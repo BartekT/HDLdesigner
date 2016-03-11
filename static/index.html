@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html ng-app="designer" ng-controller="ctrl">
+  <head>
+    <title>modelCHIP @ HDL designer</title>
+    <link rel="stylesheet" type="text/css" href="//codemirror.net/lib/codemirror.css"/>
+    <link rel="stylesheet" type="text/css" href="css/designer.css">
+    <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/angularjs/1.5.0/angular-animate.js"></script>
+    <script src="//codemirror.net/lib/codemirror.js"></script>
+    <script src="//codemirror.net/mode/vhdl/vhdl.js"></script>
+    <script src="//codemirror.net/addon/display/autorefresh.js"></script>
+    <script src="//rawgithub.com/angular-ui/ui-codemirror/bower/ui-codemirror.min.js"></script>
+    <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-1.2.2.js"></script>
+  </head>
+  <body>
+    <div class="list-area">
+    <img src="images/modelchip33.png">
+    <ul>
+	<li><a href="#"><img src="images/pencil.svg">VHDL</a></li>
+	<li><a href="#"><img src="images/config.svg">CPU</a></li>
+	<li><a href="#"><img src="images/folder.svg">Instructions</a></li>
+	<ul style="float:right;">
+	    <li><a href="#"><img src="images/medal.svg">About</a></li>
+	    <li><a href="#" ng-click="open('lg')"><img src="images/map.svg">Contact</a></li>
+	</ul>
+    </ul>
+    </div>
+    <section>
+	<div ui-codemirror="{
+	    lineNumbers: true,
+	    lineWrapping : true,
+	    mode: 'vhdl'
+	}" ng-model="code" ng-change="codeChange()" class="editor-window" resize></div>
+    </section>
+    <div class="property-window" resize>
+  <uib-tabset active="active">
+    <uib-tab index="0" heading="Registers">
+	<div class="fsm-window" resize>
+	<uib-accordion close-others="oneAtATime">
+	    <uib-accordion-group heading="{{register}}" ng-repeat="(register, assigns) in registers">
+		<ul><li ng-repeat="assign in assigns">{{assign}}</li></ul>
+	    </uib-accordion-group>
+	</div>
+	</uib-accordion>
+    </uib-tab>
+    <uib-tab index="1" heading="FSMs">
+	<div class="fsm-window" resize>
+	<uib-accordion close-others="oneAtATime">
+	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assigns) in fsms">
+		<ul><li ng-repeat="assign in assigns">{{assign}}</li></ul>
+	    </uib-accordion-group>
+	</div>
+	</uib-accordion>
+    </uib-tab>
+    <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active" disable="tab.disabled">
+      {{tab.content}}
+    </uib-tab>
+    <uib-tab index="3" select="alertMe()">
+      <uib-tab-heading>
+        <i class="glyphicon glyphicon-bell"></i> Alert!
+      </uib-tab-heading>
+      I've got an HTML heading, and a select callback. Pretty cool!
+    </uib-tab>
+  </uib-tabset>
+    </div>
+<div>
+    <script type="text/ng-template" id="myModalContent.html">
+        <div class="modal-header">
+            <h3 class="modal-title">Contact</h3>
+        </div>
+        <div class="modal-body">
+            <ul>
+                <li ng-repeat="item in items">
+                    <a href="#" ng-click="$event.preventDefault(); selected.item = item">{{ item }}</a>
+                </li>
+            </ul>
+            Selected: <b>{{ selected.item }}</b>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>
+        </div>
+    </script>
+</div>
+
+<script>
+var app = angular.module('designer', ['ui.codemirror','ui.bootstrap']);
+
+app.controller('ctrl', function ($http, $scope, $uibModal, $log) {
+
+  $scope.items = ['item1', 'item2', 'item3'];
+
+  $scope.oneAtATime = true;
+
+  $scope.animationsEnabled = true;
+
+  $scope.codeChange = function() {
+    $http.post('//localhost:5000/_parse_code', { "data": $scope.code }).success(function(response) {
+	$scope.process_list = response.process_list;
+	$scope.fsms = response.fsms;
+	$scope.registers = response.registers;
+	});
+  };
+
+  $scope.open = function (size) {
+
+    var modalInstance = $uibModal.open({
+      animation: $scope.animationsEnabled,
+      templateUrl: 'myModalContent.html',
+      controller: 'ModalInstanceCtrl',
+      size: size,
+      resolve: {
+        items: function () {
+          return $scope.items;
+        }
+      }
+    });
+
+    modalInstance.result.then(function (selectedItem) {
+      $scope.selected = selectedItem;
+    }, function () {
+      $log.info('Modal dismissed at: ' + new Date());
+    });
+  };
+
+  $scope.toggleAnimation = function () {
+    $scope.animationsEnabled = !$scope.animationsEnabled;
+  };
+
+});
+
+// Please note that $uibModalInstance represents a modal window (instance) dependency.
+// It is not the same as the $uibModal service used above.
+
+app.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance, items) {
+
+  $scope.items = items;
+  $scope.selected = {
+    item: $scope.items[0]
+  };
+
+  $scope.ok = function () {
+    $uibModalInstance.close($scope.selected.item);
+  };
+
+  $scope.cancel = function () {
+    $uibModalInstance.dismiss('cancel');
+  };
+});
+
+app.directive('resize', ['$window', function($window) {
+    return {
+	scope: {},
+        link: function(scope, elem, attrs) {
+            scope.onResize = function() {
+                var padding = 30,
+                    offset = elem.prop('offsetTop'),
+                    height = $window.innerHeight - offset - padding;
+
+                elem.css({height: height + 'px'});
+            }
+            scope.onResize();
+
+            angular.element($window).bind('resize', function() {
+                scope.onResize();
+            })
+        }
+    }
+}]);
+
+</script>
+  </body>
+</html>

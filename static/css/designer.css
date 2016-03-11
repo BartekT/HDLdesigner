@@ -1,0 +1,19 @@
+body {
+   margin:0;
+   padding:0;
+   font-family: Sans;
+   font-size: 12px;
+}
+.list-area ul { list-style-type: none; margin: 0; padding: 0; overflow: hidden; background-color: #fff; }
+.list-area li { float: left; }
+.list-area li img { float: left; padding: 0px 10px; vertical-align: middle; height: 20px; }
+.list-area li a { display: block; color: #888; text-align: center; padding: 14px 16px; text-decoration: none; }
+.list-area li a:hover { background-color: #aaa; color: #fff; }
+.list-area li a#selected { background-color: #161; }
+.list-area li a#selected:hover { background-color: #111; }
+.list-area img { float: left; height: 34px; padding: 4px 30px; }
+.list-area { border-bottom: 1px solid #ddd; }
+.editor-window { border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; width: 50%; float: left; display: block; }
+.property-window { border-bottom: 1px solid #ddd; float: left; display: block; width: 50%; padding: 3px; }
+.fsm-window { padding: 3px; overflow: auto; }
+.CodeMirror { border: 1px solid #eee; height: 100%; }

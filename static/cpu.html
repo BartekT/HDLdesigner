@@ -1,0 +1,89 @@
+<html lang="en">
+<head>
+    <link type="text/css" rel="stylesheet" href="css/designer.css">
+    <title>modelCHIP @ CPU designer</title>
+<script src="angular.min.js"></script>
+</head>
+<body>
+<div ng-app="myApp" ng-controller="myCtrl">
+    <div class="tabbed-area">
+	<img src="images/modelchip33.png">
+	<ul class="tabs group">
+	    <li><a href="/">VHDL</a></li>
+	    <li><a href="/cpu">CPU</a></li>
+	</ul>
+    </div>
+    <table width="100%" class="designer-area">
+	<tr>
+	    <td width="250">
+		<table id="instr_matrix" class="instrmatrix">
+		    <tr>
+			<th></th>
+			<th ng-repeat="x in hexitems">x{{ x }}</th>
+		    </tr>
+		    <tr ng-repeat="y in decitems">
+			<th>{{ hexitems[y] }}x</th>
+			<td ng-repeat="x in decitems" 
+			    ng-mouseenter="cellStyle={'background-color': '#ddd' };show_cycles(y*16 + x)" 
+			    ng-mouseleave="cellStyle={};hide_cycles()"
+			    ng-style="cellStyle"><b>{{ opcode_matrix[y][x] }}</b> {{ opcode_matrix_short[y][x] }}</td>
+		    </tr>
+		</table>
+	    </td>
+	</tr>
+    </table>
+    <div ng-hide="!opis">
+	<table class="opcode-desc">
+	    <tr>
+		<th colspan="{{ max_state }}">{{ sel_opcode }} {{ sel_instr }}</th>
+	    </tr>
+	    <tr ng-repeat="i in range(max_signal_length)">
+		<td ng-repeat="sigs in opis">{{ sigs[i] }}</td>
+	    </tr>
+	</table>
+    </div>
+</div>
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope, $http) {
+    $scope.opcode_matrix = [];
+    $scope.opcode_matrix_short = [];
+    $scope.hexitems = [ '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' ];
+    $scope.decitems = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ];
+
+    $scope.loadTable = function() {
+	$http.get("//localhost:5000/_load_instr").then(function (response) {
+	    $scope.opcode_matrix = response.data.opcode_matrix;
+	    $scope.opcode_matrix_short = response.data.opcode_matrix_short;
+	    $scope.opcode_cycle = response.data.opcode_cycle;
+	    $scope.max_signal_lengths = response.data.max_signal_lengths;
+	    $scope.max_states = response.data.max_states;
+	});
+    };
+
+    $scope.show_cycles = function(id) {
+	$scope.sel_instr = $scope.opcode_matrix[id >> 4][id % 16];
+	$scope.sel_opcode = ("0"+(Number(id).toString(16))).slice(-2).toUpperCase();
+	$scope.opis = $scope.opcode_cycle[$scope.sel_opcode];
+	$scope.max_signal_length = $scope.max_signal_lengths[$scope.sel_opcode];
+	$scope.max_state = $scope.max_states[$scope.sel_opcode];
+    };
+
+    $scope.hide_cycles = function() {
+	$scope.opis = 0;
+	$scope.sel_opcode = '';
+    };
+
+    $scope.range = function( max ) {
+	var values = [];
+	for(var i = 0; i < max; i++) {
+	    values.push(i);
+	}
+	return values;
+    };
+
+    $scope.loadTable();
+});
+</script>
+</body>
+</html>
