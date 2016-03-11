@@ -26,19 +26,23 @@ def tree_key_search(tree, l):
 
 def tree_expand(sub_tree, tree):
     remove_list = []
+
     if type(sub_tree) is dict:
 	for k,v in sub_tree.iteritems():
 	    st, rl = tree_expand(v, tree)
-	    print
-	    sub_tree.update(st)
+	    sub_tree[k] = st
 	    remove_list += rl
     else:
 	for v in sub_tree:
 	    if re.match('[0-9a-f]{32}', v):
+		pprint(sub_tree)
+		pprint(dict(sub_tree))
 		sub_tree.remove(v)
-		app_tree = tree_key_search(tree, x)
-		sub_tree.update(app_tree[x])
-		remove_list.append(x)
+		app_tree = tree_key_search(tree, v)
+		pprint(app_tree[v])
+		pprint(sub_tree)
+		sub_tree += app_tree[v]
+		remove_list.append(v)
     return sub_tree, remove_list
 
 def parse_to_tree(lst):
@@ -60,15 +64,9 @@ def parse_to_tree(lst):
 		tree.update({"else" : filter(None,re.split(r'(.*?);\s*', content))})
 	    main_tree.update({ key : tree })
     # Rebuild tree
-    new_main_tree = {}
     mt, rm = tree_expand(main_tree, main_tree)
-    for remove in rm:
-	for x in mt:
-	    if remove in x:
-		del x[remove]
-#    for x in mt:
-#	if x is not None:
-#	    new_main_tree.update(x)
+    for v in rm:
+	del mt[v]
     return main_tree
 
 def parse_level(code):
