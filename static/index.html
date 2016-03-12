@@ -17,7 +17,7 @@
     <div class="list-area">
     <img src="images/modelchip33.png">
     <ul>
-	<li><a href="#"><img src="images/pencil.svg">VHDL</a></li>
+	<li><a href="#"><img src="images/pencil.svg">Source</a></li>
 	<li><a href="#"><img src="images/config.svg">CPU</a></li>
 	<li><a href="#"><img src="images/folder.svg">Instructions</a></li>
 	<ul style="float:right;">
@@ -38,8 +38,8 @@
     <uib-tab index="0" heading="Registers">
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
-	    <uib-accordion-group heading="{{register}}" ng-repeat="(register, assigns) in registers">
-		<ul><li ng-repeat="assign in assigns">{{assign}}</li></ul>
+	    <uib-accordion-group heading="{{register}}" ng-repeat="register in registers">
+		test
 	    </uib-accordion-group>
 	</div>
 	</uib-accordion>
@@ -48,7 +48,12 @@
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
 	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assigns) in fsms">
-		<ul><li ng-repeat="assign in assigns">{{assign}}</li></ul>
+		<p>{{ searchText }}</p>
+		<div class="btn-group">
+		    <label class="btn btn-primary" ng-model="searchText" ng-repeat="name in assigns.output" uib-btn-radio="'{{ name }}'">{{ name }}</label>
+		</div>
+		<ul ng-if="isArr(assigns)"><li ng-repeat="assign in assigns.tree" ng-include="'list.html'"></li></ul>
+		<ul ng-if="isObj(assigns) && !isArr(assigns)"><li ng-repeat="(n, assign) in assigns.tree" ng-include="'dict.html'"></li></ul>
 	    </uib-accordion-group>
 	</div>
 	</uib-accordion>
@@ -82,7 +87,16 @@
         </div>
     </script>
 </div>
-
+<script type="text/ng-template" id="list.html">
+    {{ assign }}
+    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:searchText" ng-include="'list.html'"></li></ul>
+    <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
+</script>
+<script type="text/ng-template" id="dict.html">
+    {{ n }}
+    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:searchText" ng-include="'list.html'"></li></ul>
+    <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
+</script>
 <script>
 var app = angular.module('designer', ['ui.codemirror','ui.bootstrap']);
 
@@ -100,6 +114,14 @@ app.controller('ctrl', function ($http, $scope, $uibModal, $log) {
 	$scope.fsms = response.fsms;
 	$scope.registers = response.registers;
 	});
+  };
+
+  $scope.isArr = function(arr) {
+    return Array.isArray(arr);
+  };
+
+  $scope.isObj = function(obj) {
+    return angular.isObject(obj);
   };
 
   $scope.open = function (size) {
