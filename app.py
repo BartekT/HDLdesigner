@@ -24,6 +24,22 @@ def tree_key_search(tree, l):
 		matched.update(tree_key_search(v, l))
     return matched
 
+def tree_value_search(tree, l):
+    matched = []
+    if type(tree) is dict:
+	for k,v in tree.items():
+	    if type(v) is dict or type(v) is list:
+		matched += tree_value_search(v, l)
+	    elif re.search(l, v):
+		matched.append(v)
+    if type(tree) is list:
+	for v in tree:
+	    if type(v) is dict or type(v) is list:
+		matched += tree_value_search(v, l)
+	    elif re.search(l, v):
+		matched.append(v)
+    return matched
+
 def tree_expand(sub_tree, tree):
     remove_list = []
 
@@ -33,15 +49,11 @@ def tree_expand(sub_tree, tree):
 	    sub_tree[k] = st
 	    remove_list += rl
     else:
-	for v in sub_tree:
+	for i,v in enumerate(sub_tree):
 	    if re.match('[0-9a-f]{32}', v):
-		pprint(sub_tree)
-		pprint(dict(sub_tree))
-		sub_tree.remove(v)
+		sub_tree.pop(i)
 		app_tree = tree_key_search(tree, v)
-		pprint(app_tree[v])
-		pprint(sub_tree)
-		sub_tree += app_tree[v]
+		sub_tree.insert(i, app_tree[v])
 		remove_list.append(v)
     return sub_tree, remove_list
 
@@ -50,6 +62,7 @@ def parse_to_tree(lst):
     for l in lst:
 	for key, val in l.iteritems():
 	    tree = {}
+	    if_tree = []
 	    # Parse cases
 	    for signal, content in re.findall(r'\s*case\s*(.*?)\s*is\s*(.*)end\scase', val):
 		sub_tree = {}
@@ -69,21 +82,41 @@ def parse_to_tree(lst):
 	del mt[v]
     return main_tree
 
-def parse_level(code):
+def parse_level(code, i):
     blocks = []
-    x_hash = hashlib.md5()
-    while re.search(r'.*\s(if|case).*?(then|is).*?\send\s(if|case)', code) is not None:
-	for x in re.findall(r'.*\s(if|case)(.*?)(then|is)(.*?)(\send\s)(if|case)', code):
-	    x_hash.update(''.join(x))
-	    code = code.replace(''.join(x), x_hash.hexdigest())
-	    blocks.append({x_hash.hexdigest() : ''.join(x)})
-    return blocks
+    end = 0
+    sub_prog = 0
+    while i < len(code):
+	if re.search('(^then|^is)', code[i]):
+	    (sub_block, curr_i) = parse_level(code, i + 1)
+	    blocks.append(sub_block)
+	    i = curr_i
+	    i = i + 1
+	    return blocks, i
+	if re.search('(^if|^case)', code[i]):
+	    if end == 0:
+		(sub_block, curr_i) = parse_level(code, i + 1)
+		i = curr_i + 1
+		blocks.append(sub_block)
+		if i >= len(code):
+		    return blocks, i
+	    else:
+		return blocks, i
+	if code[i] == 'end':
+	    end = 1
+	blocks.append(code[i])
+	i = i + 1
+    return blocks, i
 
 def parse_process(code):
-    proc = []
+    proc = {}
     for process in re.findall('.*begin(.*)end.*', code):
-	proc.append(parse_to_tree(parse_level(process)))
+	(k, l) = parse_level(re.findall(r'\s*(.*?;?)(?=\s|$)', process), 0)
+	#proc.update(k)
+	pprint(k)
     return proc
+
+
 
 #-------------------------------
 # To static file server
@@ -136,22 +169,26 @@ def parse_code():
     # remove special chars
     parse_code = re.sub(r'\s+', ' ', parse_code);
 
-    process_list = []
+    process_list = {}
     for process in re.findall('process\s*\((.*?)\)(.*?)process;', parse_code):
-	process_list += parse_process(process[1])
+	process_list.update(parse_process(process[1]))
     pprint(process_list)
     signal_assign = []
     for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code):
 	signal_assign.append(signal)
-    for register in tree_key_search(process_list, '(.*?\'event|rising_edge\(.*?\)|falling_edge\(.*?\))'):
-	print register
+    registers = []
+    for k,v in tree_key_search(process_list, '(.*?\'event|rising_edge\(.*?\)|falling_edge\(.*?\))').iteritems():
+	print k
+	registers = re.findall('(.*?)\s*<=.*', ';'.join(tree_value_search(v, '.*<=.*')))
+    pprint(registers)
     fsms = {}
-    for fsm,assign in re.findall('([a-zA-Z0-9_]+)\s*<=\s*(.*?);', parse_code):
-	if fsm not in fsms:
-	    fsms[fsm] = []
-#	if assign not in fsms[fsm]:
-#	    fsms[fsm].append(asynch)
-    return jsonify(process_list = process_list, fsms = fsms)
+    for reg in registers:
+	reg_tree = tree_key_search(process_list, reg)
+	if reg_tree:
+	    fsms.update({ reg : { "tree" : tree_key_search(process_list, reg)[reg],
+		"output" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')))))}})
+    pprint(fsms)
+    return jsonify(process_list = process_list, fsms = fsms, registers = registers)
 
 if __name__ == '__main__':
 

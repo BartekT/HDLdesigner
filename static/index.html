@@ -48,9 +48,8 @@
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
 	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assigns) in fsms">
-		<p>{{ searchText }}</p>
 		<div class="btn-group">
-		    <label class="btn btn-primary" ng-model="searchText" ng-repeat="name in assigns.output" uib-btn-radio="'{{ name }}'">{{ name }}</label>
+		    <label class="btn btn-primary" ng-repeat="out_name in assigns.output" ng-model="form.searchText" uib-btn-radio="out_name" uncheckable>{{ out_name }}</label>
 		</div>
 		<ul ng-if="isArr(assigns)"><li ng-repeat="assign in assigns.tree" ng-include="'list.html'"></li></ul>
 		<ul ng-if="isObj(assigns) && !isArr(assigns)"><li ng-repeat="(n, assign) in assigns.tree" ng-include="'dict.html'"></li></ul>
@@ -89,12 +88,12 @@
 </div>
 <script type="text/ng-template" id="list.html">
     {{ assign }}
-    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:searchText" ng-include="'list.html'"></li></ul>
+    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:form.searchText:strict" ng-include="'list.html'"></li></ul>
     <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
 </script>
 <script type="text/ng-template" id="dict.html">
     {{ n }}
-    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:searchText" ng-include="'list.html'"></li></ul>
+    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:form.searchText:strict" ng-include="'list.html'"></li></ul>
     <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
 </script>
 <script>
@@ -103,6 +102,9 @@ var app = angular.module('designer', ['ui.codemirror','ui.bootstrap']);
 app.controller('ctrl', function ($http, $scope, $uibModal, $log) {
 
   $scope.items = ['item1', 'item2', 'item3'];
+
+  $scope.form = {};
+  $scope.form["searchText"] = null;
 
   $scope.oneAtATime = true;
 
