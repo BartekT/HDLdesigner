@@ -86,17 +86,15 @@ def parse_level(code, i):
     blocks = []
     end = 0
     sub_prog = 0
+    code_line = ''
     while i < len(code):
-	if re.search('(^then|^is)', code[i]):
-	    (sub_block, curr_i) = parse_level(code, i + 1)
-	    blocks.append(sub_block)
-	    i = curr_i
-	    i = i + 1
-	    return blocks, i
 	if re.search('(^if|^case)', code[i]):
+	    if len(code_line) > 0:
+		blocks.append(code_line)
+		code_line = ''
 	    if end == 0:
 		(sub_block, curr_i) = parse_level(code, i + 1)
-		i = curr_i + 1
+		i = curr_i
 		blocks.append(sub_block)
 		if i >= len(code):
 		    return blocks, i
@@ -104,14 +102,15 @@ def parse_level(code, i):
 		return blocks, i
 	if code[i] == 'end':
 	    end = 1
-	blocks.append(code[i])
+	else:
+	    code_line += ' ' + code[i]
 	i = i + 1
     return blocks, i
 
 def parse_process(code):
     proc = {}
     for process in re.findall('.*begin(.*)end.*', code):
-	(k, l) = parse_level(re.findall(r'\s*(.*?;?)(?=\s|$)', process), 0)
+	(k, l) = parse_level(re.findall(r'\s*(.+?;?)(?=\s|\(|$)', process), 0)
 	#proc.update(k)
 	pprint(k)
     return proc
