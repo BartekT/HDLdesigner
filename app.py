@@ -41,78 +41,65 @@ def tree_value_search(tree, l):
     return matched
 
 def tree_expand(sub_tree, tree):
-    remove_list = []
-
     if type(sub_tree) is dict:
 	for k,v in sub_tree.iteritems():
-	    st, rl = tree_expand(v, tree)
+	    st = tree_expand(v, tree)
 	    sub_tree[k] = st
-	    remove_list += rl
     else:
 	for i,v in enumerate(sub_tree):
 	    if re.match('[0-9a-f]{32}', v):
 		sub_tree.pop(i)
-		app_tree = tree_key_search(tree, v)
+		app_tree = tree_expand(tree_key_search(tree, v), tree)
 		sub_tree.insert(i, app_tree[v])
-		remove_list.append(v)
-    return sub_tree, remove_list
+    return sub_tree
 
-def parse_to_tree(lst):
-    main_tree = {}
-    for l in lst:
-	for key, val in l.iteritems():
-	    tree = {}
-	    if_tree = []
-	    # Parse cases
-	    for signal, content in re.findall(r'\s*case\s*(.*?)\s*is\s*(.*)end\scase', val):
-		sub_tree = {}
-		for k,v in re.findall(r'when\s*(.*?)\s*=>\s*(.*?)\s*(?=when|$)', content):
-		    sub_tree.update({k : filter(None,re.split(r'(.*?);\s*', v))})
-		tree.update({signal : sub_tree})
-	    # Parse ifs
-	    for condition, content in re.findall(r'\s*if\s*(.*?)\s*then\s*.*?(.*?)(?=end\s|els)', val):
-		tree.update({condition : filter(None,re.split(r'(.*?);\s*', content))})
-	    # Parse else end if
-	    for content in re.findall(r'\s*else\s*.*?(.*?)end if', val):
-		tree.update({"else" : filter(None,re.split(r'(.*?);\s*', content))})
-	    main_tree.update({ key : tree })
-    # Rebuild tree
-    mt, rm = tree_expand(main_tree, main_tree)
-    for v in rm:
-	del mt[v]
-    return main_tree
+def parse_entry(entry):
+    tree = {}
+    for signal, content in re.findall(r'\s*case\s*(.*?)\s*is\s*(.*)\s*end\scase', entry):
+	sub_tree = {}
+	for k,v in re.findall(r'\s*when\s*(.*?)\s*=>\s*(.*?)\s*(?=when|$)', content):
+	    sub_tree.update({k : filter(None,re.split(r'(.*?);\s*', v))})
+	tree.update({signal : sub_tree})
+    # Parse ifs
+    for condition, content in re.findall(r'\s*if\s*(.*?)\s*then\s*.*?(.*?)(?=end\s|els)', entry):
+	tree.update({condition : filter(None,re.split(r'(.*?);\s*', content))})
+    # Parse else end if
+    for content in re.findall(r'\s*else\s*.*?(.*?)\s*end if', entry):
+	tree.update({"else" : filter(None,re.split(r'(.*?);\s*', content))})
+    return tree
 
 def parse_level(code, i):
-    blocks = []
+    blocks = {}
+    x_hash = hashlib.md5()
     end = 0
-    sub_prog = 0
-    code_line = ''
+    code_line = code[i]
+    i += 1
     while i < len(code):
 	if re.search('(^if|^case)', code[i]):
-	    if len(code_line) > 0:
-		blocks.append(code_line)
-		code_line = ''
 	    if end == 0:
-		(sub_block, curr_i) = parse_level(code, i + 1)
+		(sub_block, sub_code_line, curr_i) = parse_level(code, i)
+		x_hash.update(sub_code_line)
+		blocks.update({x_hash.hexdigest() : parse_entry(sub_code_line)})
+		if sub_block:
+		    blocks.update(sub_block)
+		code_line += x_hash.hexdigest() + ';'
 		i = curr_i
-		blocks.append(sub_block)
 		if i >= len(code):
-		    return blocks, i
+		    return blocks, code_line, i
 	    else:
-		return blocks, i
+		code_line += ' ' + code[i]
+		return blocks, code_line, i + 1
 	if code[i] == 'end':
 	    end = 1
-	else:
-	    code_line += ' ' + code[i]
+	code_line += ' ' + code[i]
 	i = i + 1
-    return blocks, i
+    return blocks, code_line, i
 
 def parse_process(code):
-    proc = {}
+    proc = []
     for process in re.findall('.*begin(.*)end.*', code):
-	(k, l) = parse_level(re.findall(r'\s*(.+?;?)(?=\s|\(|$)', process), 0)
-	#proc.update(k)
-	pprint(k)
+	(k, l, m) = parse_level(re.findall(r'\s*(.+?;?)(?=\s|\(|$)', process), 0)
+	proc.append(tree_expand(parse_entry(l), k))
     return proc
 
 
@@ -168,9 +155,9 @@ def parse_code():
     # remove special chars
     parse_code = re.sub(r'\s+', ' ', parse_code);
 
-    process_list = {}
+    process_list = []
     for process in re.findall('process\s*\((.*?)\)(.*?)process;', parse_code):
-	process_list.update(parse_process(process[1]))
+	process_list.append(parse_process(process[1]))
     pprint(process_list)
     signal_assign = []
     for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code):
