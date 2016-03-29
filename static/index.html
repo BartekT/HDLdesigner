@@ -35,19 +35,10 @@
     </section>
     <div class="property-window" resize>
   <uib-tabset active="active">
-    <uib-tab index="0" heading="Registers">
+    <uib-tab index="0" heading="Control signals">
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
-	    <uib-accordion-group heading="{{register}}" ng-repeat="register in registers">
-		test
-	    </uib-accordion-group>
-	</div>
-	</uib-accordion>
-    </uib-tab>
-    <uib-tab index="1" heading="FSMs">
-	<div class="fsm-window" resize>
-	<uib-accordion close-others="oneAtATime">
-	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assigns) in fsms">
+	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assings) in fsms">
 		<div class="btn-group">
 		    <label class="btn btn-primary" ng-repeat="out_name in assigns.output" ng-model="form.searchText" uib-btn-radio="out_name" uncheckable>{{ out_name }}</label>
 		</div>
@@ -57,14 +48,21 @@
 	</div>
 	</uib-accordion>
     </uib-tab>
+    <uib-tab index="1" heading="State machine">
+	<div class="fsm-window" resize>
+	<uib-accordion close-others="oneAtATime">
+	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assigns) in fsms">
+		<div class="btn-group">
+		    <label class="btn btn-primary" ng-repeat="sig_name in assigns.state_sig" ng-model="form.searchText" uib-btn-radio="sig_name" uncheckable>{{ sig_name }}</label>
+		</div>
+		<ul ng-if="isArr(assigns)"><li ng-repeat="assign in assigns.tree" ng-include="'list.html'"></li></ul>
+		<ul ng-if="isObj(assigns) && !isArr(assigns)"><li ng-repeat="(n, assign) in assigns.tree" ng-include="'dict.html'"></li></ul>
+	    </uib-accordion-group>
+	</div>
+	</uib-accordion>
+    </uib-tab>
     <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active" disable="tab.disabled">
       {{tab.content}}
-    </uib-tab>
-    <uib-tab index="3" select="alertMe()">
-      <uib-tab-heading>
-        <i class="glyphicon glyphicon-bell"></i> Alert!
-      </uib-tab-heading>
-      I've got an HTML heading, and a select callback. Pretty cool!
     </uib-tab>
   </uib-tabset>
     </div>

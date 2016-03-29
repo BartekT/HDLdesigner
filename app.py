@@ -164,15 +164,19 @@ def parse_code():
 	signal_assign.append(signal)
     registers = []
     for k,v in tree_key_search(process_list, '(.*?\'event|rising_edge\(.*?\)|falling_edge\(.*?\))').iteritems():
-	print k
-	registers = re.findall('(.*?)\s*<=.*', ';'.join(tree_value_search(v, '.*<=.*')))
-    pprint(registers)
+	for r in tree_value_search(v, '.*<=.*'):
+	    if re.findall('(.*?)\s*<=.*',r) not in registers:
+		registers.extend(re.findall('(.*?)\s*<=.*',r))
+    pprint( registers )
     fsms = {}
     for reg in registers:
 	reg_tree = tree_key_search(process_list, reg)
 	if reg_tree:
-	    fsms.update({ reg : { "tree" : tree_key_search(process_list, reg)[reg],
-		"output" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')))))}})
+	    fsms.update({ reg : {
+		"tree" : tree_key_search(process_list, reg)[reg],
+		"output" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*'))))),
+		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')))))
+		}})
     pprint(fsms)
     return jsonify(process_list = process_list, fsms = fsms, registers = registers)
 
