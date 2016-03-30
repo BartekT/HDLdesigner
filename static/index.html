@@ -95,6 +95,25 @@
     <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
 </script>
 <script>
+
+function generate_svg(paths) {
+  var svg = '';
+  svg += '<svg width="198px" height="55px" version="1.1" xmlns="http://www.w3.org/2000/svg">\n';
+
+  for(var i in paths) {
+    var path = '';
+    path += 'M' + paths[i].mx + ' ' + paths[i].my;   // moveTo
+    path += ' L ' + paths[i].lx + ' ' + paths[i].ly; // lineTo
+    path += ' Z';                                    // closePath
+    svg += '<path d="' + path + '"stroke="blue" stroke-width="2"/>\n';
+  }
+
+  svg += '</svg>\n';
+  return svg;
+}
+
+//document.body.innerHTML = generate_svg(sig);
+
 var app = angular.module('designer', ['ui.codemirror','ui.bootstrap']);
 
 app.controller('ctrl', function ($http, $scope, $uibModal, $log) {

@@ -5,6 +5,7 @@ import MySQLdb
 import json
 import re
 import hashlib
+import pydot
 from pprint import *
 
 #-------------------------------
@@ -147,6 +148,33 @@ def load_instr():
 		    , max_signal_lengths = max_signal_lengths
 		    , max_states = max_states)
 
+def make_edges(tree, nodes, graph, state, label = None):
+    for v in tree:
+	if type(v) is dict:
+	    for k,l in v.iteritems():
+		make_edges(l, nodes, graph, state, k)
+	else:
+	    for s,val in re.findall('(.*)\s*<=\s*(.*)', v):
+		print s, val
+		if val in nodes:
+		    if label:
+			graph.add_edge(pydot.Edge(nodes[state], nodes[val], label=label))
+		    else:
+			graph.add_edge(pydot.Edge(nodes[state], nodes[val]))
+
+def paint_fsm(tree):
+    for k,v in tree.iteritems():
+	node = {}
+	if v['tree']:
+	    graph = pydot.Dot(graph_type='digraph', format='svg')
+	    for state, assigns in v['tree'].iteritems():
+		node[state] = pydot.Node(state)
+		graph.add_node(node[state])
+	    for state, assigns in v['tree'].iteritems():
+		make_edges(assigns, node, graph, state)
+	    print graph.create_svg()
+
+
 @app.route('/_parse_code', methods = ['POST'])
 def parse_code():
     data = json.loads(request.data.decode())
@@ -158,7 +186,6 @@ def parse_code():
     process_list = []
     for process in re.findall('process\s*\((.*?)\)(.*?)process;', parse_code):
 	process_list.append(parse_process(process[1]))
-    pprint(process_list)
     signal_assign = []
     for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code):
 	signal_assign.append(signal)
@@ -167,7 +194,6 @@ def parse_code():
 	for r in tree_value_search(v, '.*<=.*'):
 	    if re.findall('(.*?)\s*<=.*',r) not in registers:
 		registers.extend(re.findall('(.*?)\s*<=.*',r))
-    pprint( registers )
     fsms = {}
     for reg in registers:
 	reg_tree = tree_key_search(process_list, reg)
@@ -177,7 +203,7 @@ def parse_code():
 		"output" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*'))))),
 		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')))))
 		}})
-    pprint(fsms)
+    paint_fsm(fsms)
     return jsonify(process_list = process_list, fsms = fsms, registers = registers)
 
 if __name__ == '__main__':
