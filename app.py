@@ -17,7 +17,7 @@ def tree_key_search(tree, l):
     if type(tree) is dict:
 	for k,v in tree.items():
 	    matched.update(tree_key_search(v, l))
-	    if re.search(l, k):
+	    if re.search(l, k, re.I):
 		matched.update({ k: v })
     if type(tree) is list:
 	for v in tree:
@@ -155,7 +155,6 @@ def make_edges(tree, nodes, graph, state, label = None):
 		make_edges(l, nodes, graph, state, k)
 	else:
 	    for s,val in re.findall('(.*)\s*<=\s*(.*)', v):
-		print s, val
 		if val in nodes:
 		    if label:
 			graph.add_edge(pydot.Edge(nodes[state], nodes[val], label=label))
@@ -163,16 +162,14 @@ def make_edges(tree, nodes, graph, state, label = None):
 			graph.add_edge(pydot.Edge(nodes[state], nodes[val]))
 
 def paint_fsm(tree):
-    for k,v in tree.iteritems():
-	node = {}
-	if v['tree']:
-	    graph = pydot.Dot(graph_type='digraph', format='svg')
-	    for state, assigns in v['tree'].iteritems():
-		node[state] = pydot.Node(state)
-		graph.add_node(node[state])
-	    for state, assigns in v['tree'].iteritems():
-		make_edges(assigns, node, graph, state)
-	    print graph.create_svg()
+    node = {}
+    graph = pydot.Dot(graph_type='digraph', format='svg')
+    for state, assigns in tree.iteritems():
+        node[state] = pydot.Node(state)
+        graph.add_node(node[state])
+    for state, assigns in tree.iteritems():
+        make_edges(assigns, node, graph, state)
+    return graph.create_svg()
 
 
 @app.route('/_parse_code', methods = ['POST'])
@@ -184,7 +181,7 @@ def parse_code():
     parse_code = re.sub(r'\s+', ' ', parse_code);
 
     process_list = []
-    for process in re.findall('process\s*\((.*?)\)(.*?)process;', parse_code):
+    for process in re.findall('process\s*\((.*?)\)(.*?)process\s*(.*?);', parse_code):
 	process_list.append(parse_process(process[1]))
     signal_assign = []
     for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code):
@@ -201,9 +198,9 @@ def parse_code():
 	    fsms.update({ reg : {
 		"tree" : tree_key_search(process_list, reg)[reg],
 		"output" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*'))))),
-		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')))))
+		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*'))))),
+		"svg" : paint_fsm(tree_key_search(process_list, reg)[reg])
 		}})
-    paint_fsm(fsms)
     return jsonify(process_list = process_list, fsms = fsms, registers = registers)
 
 if __name__ == '__main__':

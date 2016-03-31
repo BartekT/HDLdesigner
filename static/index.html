@@ -52,11 +52,7 @@
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
 	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assigns) in fsms">
-		<div class="btn-group">
-		    <label class="btn btn-primary" ng-repeat="sig_name in assigns.state_sig" ng-model="form.searchText" uib-btn-radio="sig_name" uncheckable>{{ sig_name }}</label>
-		</div>
-		<ul ng-if="isArr(assigns)"><li ng-repeat="assign in assigns.tree" ng-include="'list.html'"></li></ul>
-		<ul ng-if="isObj(assigns) && !isArr(assigns)"><li ng-repeat="(n, assign) in assigns.tree" ng-include="'dict.html'"></li></ul>
+		<svg-img content="{{assigns.svg}}"></svg-img>
 	    </uib-accordion-group>
 	</div>
 	</uib-accordion>
@@ -95,25 +91,6 @@
     <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
 </script>
 <script>
-
-function generate_svg(paths) {
-  var svg = '';
-  svg += '<svg width="198px" height="55px" version="1.1" xmlns="http://www.w3.org/2000/svg">\n';
-
-  for(var i in paths) {
-    var path = '';
-    path += 'M' + paths[i].mx + ' ' + paths[i].my;   // moveTo
-    path += ' L ' + paths[i].lx + ' ' + paths[i].ly; // lineTo
-    path += ' Z';                                    // closePath
-    svg += '<path d="' + path + '"stroke="blue" stroke-width="2"/>\n';
-  }
-
-  svg += '</svg>\n';
-  return svg;
-}
-
-//document.body.innerHTML = generate_svg(sig);
-
 var app = angular.module('designer', ['ui.codemirror','ui.bootstrap']);
 
 app.controller('ctrl', function ($http, $scope, $uibModal, $log) {
@@ -209,6 +186,17 @@ app.directive('resize', ['$window', function($window) {
     }
 }]);
 
+app.directive('svgImg', function() {
+    return {
+	scope: { content:'@' },
+	link: function(scope, elem, attrs) {
+	    scope.$watch("content",function(newValue,oldValue) {
+		elem.html(newValue);
+	    });
+	    elem.html(attrs.content);
+    }
+    };
+});
 </script>
   </body>
 </html>
