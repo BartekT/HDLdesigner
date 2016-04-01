@@ -31,13 +31,13 @@ def tree_value_search(tree, l):
 	for k,v in tree.items():
 	    if type(v) is dict or type(v) is list:
 		matched += tree_value_search(v, l)
-	    elif re.search(l, v):
+	    elif re.search(l, v, re.I):
 		matched.append(v)
     if type(tree) is list:
 	for v in tree:
 	    if type(v) is dict or type(v) is list:
 		matched += tree_value_search(v, l)
-	    elif re.search(l, v):
+	    elif re.search(l, v, re.I):
 		matched.append(v)
     return matched
 
@@ -56,16 +56,16 @@ def tree_expand(sub_tree, tree):
 
 def parse_entry(entry):
     tree = {}
-    for signal, content in re.findall(r'\s*case\s*(.*?)\s*is\s*(.*)\s*end\scase', entry):
+    for signal, content in re.findall(r'\s*case\s*(.*?)\s*is\s*(.*)\s*end\scase', entry, re.I):
 	sub_tree = {}
-	for k,v in re.findall(r'\s*when\s*(.*?)\s*=>\s*(.*?)\s*(?=when|$)', content):
+	for k,v in re.findall(r'\s*when\s*(.*?)\s*=>\s*(.*?)\s*(?=when|$)', content, re.I):
 	    sub_tree.update({k : filter(None,re.split(r'(.*?);\s*', v))})
 	tree.update({signal : sub_tree})
     # Parse ifs
-    for condition, content in re.findall(r'\s*if\s*(.*?)\s*then\s*.*?(.*?)(?=end\s|els)', entry):
+    for condition, content in re.findall(r'\s*if\s*(.*?)\s*then\s*.*?(.*?)(?=end\s|els)', entry, re.I):
 	tree.update({condition : filter(None,re.split(r'(.*?);\s*', content))})
     # Parse else end if
-    for content in re.findall(r'\s*else\s*.*?(.*?)\s*end if', entry):
+    for content in re.findall(r'\s*else\s*.*?(.*?)\s*end if', entry, re.I):
 	tree.update({"else" : filter(None,re.split(r'(.*?);\s*', content))})
     return tree
 
@@ -76,7 +76,7 @@ def parse_level(code, i):
     code_line = code[i]
     i += 1
     while i < len(code):
-	if re.search('(^if|^case)', code[i]):
+	if re.search('(^if|^case)', code[i], re.I):
 	    if end == 0:
 		(sub_block, sub_code_line, curr_i) = parse_level(code, i)
 		x_hash.update(sub_code_line)
@@ -90,7 +90,7 @@ def parse_level(code, i):
 	    else:
 		code_line += ' ' + code[i]
 		return blocks, code_line, i + 1
-	if code[i] == 'end':
+	if code[i].lower() == 'end':
 	    end = 1
 	code_line += ' ' + code[i]
 	i = i + 1
@@ -98,12 +98,30 @@ def parse_level(code, i):
 
 def parse_process(code):
     proc = []
-    for process in re.findall('.*begin(.*)end.*', code):
-	(k, l, m) = parse_level(re.findall(r'\s*(.+?;?)(?=\s|\(|$)', process), 0)
+    for process in re.findall('.*begin(.*)end.*', code, re.I):
+	(k, l, m) = parse_level(re.findall(r'\s*(.+?;?)(?=\s|\(|$)', process, re.I), 0)
 	proc.append(tree_expand(parse_entry(l), k))
     return proc
 
-
+def tree_value_grep(tree, val):
+    if type(tree) is dict:
+	new_tree = {}
+	for k,v in tree.iteritems():
+	    grep = tree_value_grep(v, val)
+	    if grep:
+		new_tree[k] = grep
+	return new_tree
+    elif type(tree) is list:
+	new_tree = []
+	for v in tree:
+	    grep = tree_value_grep(v, val)
+	    if grep:
+		new_tree.append(grep)
+	return new_tree
+    else:
+	if re.match(val, tree):
+	    return tree
+    return None
 
 #-------------------------------
 # To static file server
@@ -154,16 +172,29 @@ def make_edges(tree, nodes, graph, state, label = None):
 	    for k,l in v.iteritems():
 		make_edges(l, nodes, graph, state, k)
 	else:
-	    for s,val in re.findall('(.*)\s*<=\s*(.*)', v):
+	    for s,val in re.findall('(.*)\s*<=\s*(.*)', v, re.I):
 		if val in nodes:
 		    if label:
 			graph.add_edge(pydot.Edge(nodes[state], nodes[val], label=label))
 		    else:
 			graph.add_edge(pydot.Edge(nodes[state], nodes[val]))
 
-def paint_fsm(tree):
+def paint_fsm(tree, name):
+    nodes = {}
+    graph = pydot.Dot(graph_type = 'digraph', format = 'svg', graph_name = name)
+    for state, assigns in tree.iteritems():
+        nodes[state] = pydot.Node(state)
+        graph.add_node(nodes[state])
+    for state, assigns in tree.iteritems():
+        make_edges(assigns, nodes, graph, state)
+    return graph.create_svg()
+
+def 
+
+def paint_output(tree, name):
+    pprint(tree)
     node = {}
-    graph = pydot.Dot(graph_type='digraph', format='svg')
+    graph = pydot.Dot(graph_type = 'digraph', format = 'svg', graph_name = name)
     for state, assigns in tree.iteritems():
         node[state] = pydot.Node(state)
         graph.add_node(node[state])
@@ -181,27 +212,29 @@ def parse_code():
     parse_code = re.sub(r'\s+', ' ', parse_code);
 
     process_list = []
-    for process in re.findall('process\s*\((.*?)\)(.*?)process\s*(.*?);', parse_code):
+    for process in re.findall('process\s*\((.*?)\)(.*?)process\s*(.*?);', parse_code, re.I):
 	process_list.append(parse_process(process[1]))
     signal_assign = []
-    for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code):
+    for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code, re.I):
 	signal_assign.append(signal)
     registers = []
-    for k,v in tree_key_search(process_list, '(.*?\'event|rising_edge\(.*?\)|falling_edge\(.*?\))').iteritems():
+    for k,v in tree_key_search(process_list, '(.*?\'event|rising_edge\s*\(.*?\)|falling_edge\s*\(.*?\))').iteritems():
 	for r in tree_value_search(v, '.*<=.*'):
-	    if re.findall('(.*?)\s*<=.*',r) not in registers:
-		registers.extend(re.findall('(.*?)\s*<=.*',r))
+	    if re.findall('(.*?)\s*<=.*', r, re.I) not in registers:
+		registers.extend(re.findall('(.*?)\s*<=.*', r, re.I))
     fsms = {}
     for reg in registers:
 	reg_tree = tree_key_search(process_list, reg)
 	if reg_tree:
 	    fsms.update({ reg : {
 		"tree" : tree_key_search(process_list, reg)[reg],
-		"output" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*'))))),
-		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*'))))),
-		"svg" : paint_fsm(tree_key_search(process_list, reg)[reg])
+		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')), re.I))),
+		"svg" : paint_fsm(tree_key_search(process_list, reg)[reg], reg)
 		}})
-    return jsonify(process_list = process_list, fsms = fsms, registers = registers)
+    outputs = {}
+    for output in list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')), re.I))):
+	outputs[output] = paint_output(tree_value_grep(process_list, output), output)
+    return jsonify(fsms = fsms, outputs = outputs)
 
 if __name__ == '__main__':
 

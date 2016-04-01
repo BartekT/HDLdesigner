@@ -38,12 +38,8 @@
     <uib-tab index="0" heading="Control signals">
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
-	    <uib-accordion-group heading="{{fsm}}" ng-repeat="(fsm, assings) in fsms">
-		<div class="btn-group">
-		    <label class="btn btn-primary" ng-repeat="out_name in assigns.output" ng-model="form.searchText" uib-btn-radio="out_name" uncheckable>{{ out_name }}</label>
-		</div>
-		<ul ng-if="isArr(assigns)"><li ng-repeat="assign in assigns.tree" ng-include="'list.html'"></li></ul>
-		<ul ng-if="isObj(assigns) && !isArr(assigns)"><li ng-repeat="(n, assign) in assigns.tree" ng-include="'dict.html'"></li></ul>
+	    <uib-accordion-group heading="{{name}}" ng-repeat="(name, svg) in outputs">
+		{{ svg }}
 	    </uib-accordion-group>
 	</div>
 	</uib-accordion>
@@ -106,9 +102,8 @@ app.controller('ctrl', function ($http, $scope, $uibModal, $log) {
 
   $scope.codeChange = function() {
     $http.post('//localhost:5000/_parse_code', { "data": $scope.code }).success(function(response) {
-	$scope.process_list = response.process_list;
 	$scope.fsms = response.fsms;
-	$scope.registers = response.registers;
+	$scope.outputs = response.outputs;
 	});
   };
 
