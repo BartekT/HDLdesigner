@@ -97,10 +97,10 @@ def parse_level(code, i):
     return blocks, code_line, i
 
 def parse_process(code):
-    proc = []
-    for process in re.findall('.*begin(.*)end.*', code, re.I):
+    proc = {}
+    for process in re.findall('.*begin\s*(.*)\s*end.*', code, re.I):
 	(k, l, m) = parse_level(re.findall(r'\s*(.+?;?)(?=\s|\(|$)', process, re.I), 0)
-	proc.append(tree_expand(parse_entry(l), k))
+	proc.update(tree_expand(parse_entry(l), k))
     return proc
 
 def tree_value_grep(tree, val):
@@ -189,17 +189,32 @@ def paint_fsm(tree, name):
         make_edges(assigns, nodes, graph, state)
     return graph.create_svg()
 
-def 
+def make_leaf(tree, nodes, graph, link_node):
+    if type(tree) is dict:
+	for state, assigns in tree.iteritems():
+	    graph.add_edge(pydot.Edge(nodes[link_node], nodes[state]))
+	    make_leaf(assigns, nodes, graph, state)
+    elif type(tree) is list:
+	for v in tree:
+	    make_leaf(v, nodes, graph, link_node)
+    else:
+        graph.add_edge(pydot.Edge(nodes[link_node], nodes[tree]))
+
+
 
 def paint_output(tree, name):
-    pprint(tree)
-    node = {}
-    graph = pydot.Dot(graph_type = 'digraph', format = 'svg', graph_name = name)
+    nodes = {}
+    graph = pydot.Dot(graph_type = 'digraph', format = 'svg', graph_name = name, rankdir='LR')
+    for end in list(set(tree_value_search(tree, '.*<=.*'))):
+	nodes[end] = pydot.Node(end)
+	graph.add_node(nodes[end])
+    for mid in list(set(tree_key_search(tree, '.*'))):
+	nodes[mid] = pydot.Node(mid)
+	graph.add_node(nodes[end])
     for state, assigns in tree.iteritems():
-        node[state] = pydot.Node(state)
-        graph.add_node(node[state])
-    for state, assigns in tree.iteritems():
-        make_edges(assigns, node, graph, state)
+        nodes[state] = pydot.Node(state)
+        graph.add_node(nodes[state])
+	make_leaf(assigns, nodes, graph, state)
     return graph.create_svg()
 
 
@@ -211,9 +226,9 @@ def parse_code():
     # remove special chars
     parse_code = re.sub(r'\s+', ' ', parse_code);
 
-    process_list = []
-    for process in re.findall('process\s*\((.*?)\)(.*?)process\s*(.*?);', parse_code, re.I):
-	process_list.append(parse_process(process[1]))
+    process_list = {}
+    for sensitive, body, name in re.findall('process\s*\((.*?)\)\s*(.*?)\s*process\s*(.*?);', parse_code, re.I):
+	process_list.update(parse_process(body))
     signal_assign = []
     for signal in re.findall('\s(.*?)\s*<= .*?;', parse_code, re.I):
 	signal_assign.append(signal)
@@ -232,7 +247,7 @@ def parse_code():
 		"svg" : paint_fsm(tree_key_search(process_list, reg)[reg], reg)
 		}})
     outputs = {}
-    for output in list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')), re.I))):
+    for output in list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(process_list, '.*?\s*<=.*')), re.I))):
 	outputs[output] = paint_output(tree_value_grep(process_list, output), output)
     return jsonify(fsms = fsms, outputs = outputs)
 

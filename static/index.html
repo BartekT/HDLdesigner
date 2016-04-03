@@ -39,7 +39,7 @@
 	<div class="fsm-window" resize>
 	<uib-accordion close-others="oneAtATime">
 	    <uib-accordion-group heading="{{name}}" ng-repeat="(name, svg) in outputs">
-		{{ svg }}
+		<svg-img content="{{ svg }}"></svg-img>
 	    </uib-accordion-group>
 	</div>
 	</uib-accordion>
@@ -76,16 +76,6 @@
         </div>
     </script>
 </div>
-<script type="text/ng-template" id="list.html">
-    {{ assign }}
-    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:form.searchText:strict" ng-include="'list.html'"></li></ul>
-    <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
-</script>
-<script type="text/ng-template" id="dict.html">
-    {{ n }}
-    <ul ng-if="isArr(assign)"><li ng-repeat="assign in assign | filter:form.searchText:strict" ng-include="'list.html'"></li></ul>
-    <ul ng-if="isObj(assign) && !isArr(assign)"><li ng-repeat="(n, assign) in assign" ng-include="'dict.html'"></li></ul>
-</script>
 <script>
 var app = angular.module('designer', ['ui.codemirror','ui.bootstrap']);
 
