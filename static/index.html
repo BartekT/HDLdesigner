@@ -12,7 +12,7 @@
     <script src="//codemirror.net/addon/display/autorefresh.js"></script>
     <script src="//rawgithub.com/angular-ui/ui-codemirror/bower/ui-codemirror.min.js"></script>
     <script src="//angular-ui.github.io/bootstrap/ui-bootstrap-tpls-1.2.2.js"></script>
-    <script src="lib/angular-file-saver.bundle.min.js"></script>
+    <script src="/lib/angular-file-saver.bundle.min.js"></script>
   </head>
   <body>
     <div class="list-area">
@@ -43,8 +43,9 @@
 		<uib-accordion-heading>
 		{{name}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
 		</uib-accordion-heading>
+		<button type="button" class="btn btn-info" ng-click="vm.download(svg)" ng-controller="svgSaveCtrl as vm">Download SVG</button>
 		<div class="svg">
-		    <svg-img content="{{ svg }}"></svg-img>
+		    <svg-img content="{{svg}}"></svg-img>
 		</div>
 	    </uib-accordion-group>
 	</div>
@@ -57,9 +58,9 @@
 		<uib-accordion-heading>
 		{{fsm}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
 		</uib-accordion-heading>
+		<button type="button" class="btn btn-info" ng-click="vm.download(assigns.svg)" ng-controller="svgSaveCtrl as vm">Download SVG</button>
 		<div class="svg">
 		    <svg-img content="{{assigns.svg}}"></svg-img>
-		    <a href="" class="btn btn-dark btn-small" ng-click="svgDownload(assigns.svg)">Download</a>
 		</div>
 	    </uib-accordion-group>
 	</div>
@@ -91,7 +92,22 @@
 <script>
 var app = angular.module('designer', ['ui.codemirror', 'ui.bootstrap', 'ngFileSaver']);
 
-app.controller('ctrl', [ '$http', '$scope', '$uibModal', 'Blob', 'FileSaver', function ($http, $scope, $uibModal, $log) {
+function svgSaveCtrl(FileSaver, Blob) {
+  var vm = this;
+
+  vm.val = {
+    text: 'Hey ho lets go!'
+  };
+
+  vm.download = function(text) {
+    var data = new Blob([text], { type: 'image/svg+xml' });
+    FileSaver.saveAs(data, 'diagram.svg');
+  };
+}
+
+app.controller('svgSaveCtrl', ['FileSaver', 'Blob', svgSaveCtrl]);
+
+app.controller('ctrl', function ($http, $scope, $uibModal, $log) {
 
   $scope.items = ['item1', 'item2', 'item3'];
 
@@ -116,11 +132,6 @@ app.controller('ctrl', [ '$http', '$scope', '$uibModal', 'Blob', 'FileSaver', fu
 
   $scope.isObj = function(obj) {
     return angular.isObject(obj);
-  };
-
-  $scope.svgDownload = function(svg) {
-    var data = new Blob([svg], { type: 'image/svg+xml' });
-    Filesaver.saveAs(data, 'schema.svg');
   };
 
   $scope.open = function (size) {
@@ -148,7 +159,7 @@ app.controller('ctrl', [ '$http', '$scope', '$uibModal', 'Blob', 'FileSaver', fu
     $scope.animationsEnabled = !$scope.animationsEnabled;
   };
 
-}]);
+});
 
 // Please note that $uibModalInstance represents a modal window (instance) dependency.
 // It is not the same as the $uibModal service used above.
