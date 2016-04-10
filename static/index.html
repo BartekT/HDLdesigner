@@ -1,7 +1,7 @@
 <!DOCTYPE html>
-<html ng-app="designer" ng-controller="ctrl">
+<html ng-app="designer" ng-controller="menuCtrl">
    <head>
-      <title>HDL designer</title>
+      <title>modelCHIP</title>
       <link rel="stylesheet" type="text/css" href="//codemirror.net/lib/codemirror.css"/>
       <link rel="stylesheet" type="text/css" href="css/designer.css">
       <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
@@ -15,63 +15,116 @@
       <script src="/lib/angular-file-saver.bundle.min.js"></script>
    </head>
    <body>
-      <div class="list-area">
-         <ul>
-            <li><a href="#"><img src="images/config.svg">HDL designer</a></li>
-            <li><a href="#"><img src="images/pencil.svg">CPU designer</a></li>
-            <li><a href="#"><img src="images/folder.svg">Instructions designer</a></li>
-            <ul style="float:right;">
-               <li><a href="#"><img src="images/medal.svg">About</a></li>
-               <li><a href="#" ng-click="open('lg')"><img src="images/map.svg">Contact</a></li>
-            </ul>
-         </ul>
+      <form name="_xclick" action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank">
+         <input type="hidden" name="cmd" value="_s-xclick">
+         <input type="hidden" name="encrypted" value="-----BEGIN PKCS7-----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-----END PKCS7-----">
+      </form>
+      <!-- MENU -->
+      <div class="menu-window">
+         <div class="btn-group">
+            <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'HDL'"><img src="images/config.svg"> model<b>FSM</b></label>
+            <!-- <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'CPU'"><img src="images/pencil.svg"> model<b>CPU</b></label> -->
+            <!-- <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'IP'"><img src="images/folder.svg"> model<b>IP</b></label> -->
+            <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'Translate'"><img src="images/folder.svg"> model<b>Translate</b></label>
+         </div>
+         <div class="btn-group" style="float: right;">
+            <label class="btn btn-primary" ng-click="open('lg')"><img src="images/medal.svg"> Help</label>
+         </div>
       </div>
-      <section>
-         <div ui-codemirror="{
-            lineNumbers: true,
-            lineWrapping : true,
-            mode: 'vhdl'
-            }" ng-model="code" ng-change="codeChange()" class="editor-window" resize></div>
-      </section>
-      <div class="property-window">
-         <uib-tabset active="active">
-            <uib-tab index="0" heading="Control signals">
-               <div class="fsm-window">
-                  <uib-accordion close-others="oneAtATime">
-                     <uib-accordion-group ng-repeat="(name, svg) in outputs" is-open="status.open">
-                        <uib-accordion-heading>
-                           {{name}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
-                        </uib-accordion-heading>
-                        <button type="button" class="btn btn-info" ng-click="vm.download(svg)" ng-controller="svgSaveCtrl as vm">Download SVG</button>
-                        <div class="svg">
-                           <svg-img content="{{svg}}"></svg-img>
-                        </div>
-                     </uib-accordion-group>
-               </div>
-               </uib-accordion>
-            </uib-tab>
-            <uib-tab index="1" heading="State machine">
-               <div class="fsm-window">
-                  <uib-accordion close-others="oneAtATime">
-                     <uib-accordion-group ng-repeat="(fsm, assigns) in fsms" is-open="status.open">
-                        <uib-accordion-heading>
-                           {{fsm}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
-                        </uib-accordion-heading>
-                        <button type="button" class="btn btn-info" ng-click="vm.download(assigns.svg)" ng-controller="svgSaveCtrl as vm">Download SVG</button>
-                        <div class="svg">
-                           <svg-img content="{{assigns.svg}}"></svg-img>
-                        </div>
-                     </uib-accordion-group>
-               </div>
-               </uib-accordion>
-            </uib-tab>
-            <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active" disable="tab.disabled">
-               {{tab.content}}
-            </uib-tab>
-         </uib-tabset>
+      <div resize>
+         <!-- HDL designer -->
+         <div ng-controller="HDLctrl" ng-show="actvPanel == 'HDL'">
+            <div ui-codemirror="{
+               lineNumbers: true,
+               lineWrapping : true,
+               mode: 'vhdl'
+               }" ng-model="code" ng-change="codeChange()" class="editor-window"></div>
+            <div class="property-window">
+               <uib-tabset active="active">
+                  <uib-tab index="0" heading="Control signals">
+                     <div class="fsm-window">
+                        <uib-accordion close-others="oneAtATime">
+                           <uib-accordion-group ng-repeat="(name, svg) in outputs" is-open="status.open">
+                              <uib-accordion-heading>
+                                 {{name}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
+                              </uib-accordion-heading>
+                              <button type="button" class="btn btn-info" ng-click="vm.download(svg)" ng-controller="svgSaveCtrl as vm">Download SVG</button>
+                              <div class="svg">
+                                 <svg-img content="{{svg}}"></svg-img>
+                              </div>
+                           </uib-accordion-group>
+                     </div>
+                     </uib-accordion>
+                  </uib-tab>
+                  <uib-tab index="1" heading="State machines">
+                     <div class="fsm-window">
+                        <uib-accordion close-others="oneAtATime">
+                           <uib-accordion-group ng-repeat="(fsm, assigns) in fsms" is-open="status.open">
+                              <uib-accordion-heading>
+                                 {{fsm}} <i class="pull-right glyphicon" ng-class="{'glyphicon-chevron-down': status.open, 'glyphicon-chevron-right': !status.open}"></i>
+                              </uib-accordion-heading>
+                              <button type="button" class="btn btn-info" ng-click="vm.download(assigns.svg)" ng-controller="svgSaveCtrl as vm">Download SVG</button>
+                              <div class="svg">
+                                 <svg-img content="{{assigns.svg}}"></svg-img>
+                              </div>
+                           </uib-accordion-group>
+                     </div>
+                     </uib-accordion>
+                  </uib-tab>
+                  <uib-tab index="$index + 1" ng-repeat="tab in tabs" heading="{{tab.title}}" active="tab.active" disable="tab.disabled">
+                     {{tab.content}}
+                  </uib-tab>
+               </uib-tabset>
+            </div>
+         </div>
+         <!-- Translate -->
+         <div ng-controller="Transctrl" ng-show="actvPanel == 'Translate'">
+            <div ui-codemirror="{
+               lineNumbers: true,
+               lineWrapping : true,
+               mode: 'vhdl'
+               }" ng-model="code" ng-change="codeChange()" class="editor-window"></div>
+            <div ui-codemirror="{
+               lineNumbers: true,
+               lineWrapping : true,
+               mode: 'verilog'
+               }" ng-model="trans_code" class="editor-window"></div>
+         </div>
+         <!-- CPU designer -->
+         <div ng-controller="cpu_ctrl" ng-show="actvPanel == 'CPU'" resize>
+            <table class="instrmatrix">
+               <tr>
+                  <th></th>
+                  <th ng-repeat="x in hexitems">x{{ x }}</th>
+               </tr>
+               <tr ng-repeat="y in decitems">
+                  <th>{{ hexitems[y] }}x</th>
+                  <td ng-repeat="x in decitems" 
+                     ng-mouseenter="cellStyle={'background-color': '#ddd' };show_cycles(y*16 + x)" 
+                     ng-mouseleave="cellStyle={};hide_cycles()"
+                     ng-style="cellStyle"><b>{{ opcode_matrix[y][x] }}</b> {{ opcode_matrix_short[y][x] }}</td>
+               </tr>
+            </table>
+            <div ng-hide="!opis">
+               <table class="opcode-desc">
+                  <tr>
+                     <th colspan="{{ max_state }}">{{ sel_opcode }} {{ sel_instr }}</th>
+                  </tr>
+                  <tr ng-repeat="i in range(max_signal_length)">
+                     <th>{{i}}</th>
+                     <td ng-repeat="sigs in opis">{{ sigs[i] }}</td>
+                  </tr>
+               </table>
+            </div>
+         </div>
       </div>
+      <!-- FOOTER -->
       <div class="footer-window">
-         <img src="/images/modelchip333.png">
+         <ul>
+            <li><a target="_blank" href="https://github.com/BartekT/HDLdesigner">issue tracker</a></li>
+            <li><a href="javascript:document._xclick.submit();">donate</a></li>
+         </ul>
+         <a href="mailto:info@modelchip.com"><img src="/images/modelchip333.png"></a>
       </div>
       <div>
          <script type="text/ng-template" id="myModalContent.html">
@@ -92,5 +145,7 @@
          </script>
       </div>
       <script src="/lib/hdl_designer.js"></script>
+      <script src="/lib/trans_designer.js"></script>
+      <script src="/lib/cpu_designer.js"></script>
    </body>
 </html>
