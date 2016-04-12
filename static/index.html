@@ -38,7 +38,7 @@
                lineNumbers: true,
                lineWrapping : true,
                mode: 'vhdl'
-               }" ng-model="code" ng-change="codeChange()" class="editor-window"></div>
+               }" ng-model="code" ng-change="codeChange()" class="editor-window" resize></div>
             <div class="property-window">
                <uib-tabset active="active">
                   <uib-tab index="0" heading="Control signals">
@@ -83,15 +83,16 @@
                lineNumbers: true,
                lineWrapping : true,
                mode: 'vhdl'
-               }" ng-model="code" ng-change="codeChange()" class="editor-window"></div>
+               }" ng-model="code" ng-change="codeChange()" class="editor-window" resize></div>
             <div ui-codemirror="{
                lineNumbers: true,
                lineWrapping : true,
-               mode: 'verilog'
-               }" ng-model="trans_code" class="editor-window"></div>
+               mode: 'verilog',
+               readOnly: true
+               }" ng-model="trans_code" class="editor-window" resize></div>
          </div>
          <!-- CPU designer -->
-         <div ng-controller="cpu_ctrl" ng-show="actvPanel == 'CPU'" resize>
+         <div ng-controller="cpu_ctrl" ng-show="actvPanel == 'CPU'">
             <table class="instrmatrix">
                <tr>
                   <th></th>
@@ -129,7 +130,7 @@
       <div>
          <script type="text/ng-template" id="myModalContent.html">
             <div class="modal-header">
-                <h3 class="modal-title">Contact</h3>
+                <h3 class="modal-title">Help</h3>
             </div>
             <div class="modal-body">
                 <ul>

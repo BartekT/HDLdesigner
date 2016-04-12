@@ -92,23 +92,22 @@ app.controller('ModalInstanceCtrl', function ($scope, $uibModalInstance, items) 
 });
 
 app.directive('resize', ['$window', function($window) {
-    return {
-        link: function(scope, elem, attrs) {
-            scope.onResize = function() {
-                var padding = 34,
-		    offset = elem.prop('offsetTop'),
-                    height = $window.innerHeight - offset - padding;
-                elem.css({height: height + 'px'});
-		console.log(height);
-            }
-            scope.onResize();
-
-            angular.element($window).bind('resize', function() {
-                scope.onResize();
-            })
-        }
-    }
-}]);
+	    return {
+	        link: function(scope, elem, attrs) {
+	            scope.onResize = function() {
+	                var padding = 34,
+			    offset = elem.prop('offsetTop'),
+	                    height = $window.innerHeight - offset - padding;
+	                elem.css({height: height + 'px'});
+			console.log(height);
+	            }
+	            scope.onResize();
+	                angular.element($window).bind('resize', function() {
+	                scope.onResize();
+	            })
+	        }
+	    }
+	}]);
 
 app.directive('svgImg', function() {
     return {

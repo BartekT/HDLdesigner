@@ -9,7 +9,7 @@ body {
 .editor-window { border-bottom: 1px solid #ddd; border-right: 1px solid #ddd; width: 50%; float: left; display: block; }
 .property-window { float: left; display: block; width: 50%; padding: 3px; }
 .fsm-window { padding: 3px; overflow: auto; }
-.CodeMirror { border: 1px solid #eee; }
+.CodeMirror { border: 1px solid #eee; height: 100%; }
 .svg { overflow: auto; }
 .footer-window { display: block; clear: both; height: 34px; line-height: 34px; text-align: right; background-color: #111; }
 .footer-window ul { list-style-type: none; margin: 0; padding: 0; }
