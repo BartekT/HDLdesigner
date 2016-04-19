@@ -132,10 +132,6 @@ app = Flask(__name__, static_url_path='')
 def index():
     return app.send_static_file('index.html')
 
-@app.route('/cpu')
-def cpu():
-    return app.send_static_file('cpu.html')
-
 @app.route('/_load_instr')
 def load_instr():
     cursor.execute("SELECT mnemonics.opcode, mnemonics.name, modes_desc.short FROM `mnemonics` LEFT JOIN modes_desc ON mnemonics.mode = modes_desc.id")
@@ -250,6 +246,38 @@ def parse_code():
     for output in list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(process_list, '.*?\s*<=.*')), re.I))):
 	outputs[output] = paint_output(tree_value_grep(process_list, output), output)
     return jsonify(fsms = fsms, outputs = outputs)
+
+@app.route('/_translate', methods = ['POST'])
+def translate():
+    data = json.loads(request.data.decode())
+    signals = {}
+    # remove
+    trans_code = re.sub(r'library\s.*?;', '', data["data"], re.I);
+    trans_code = re.sub(r'use\s*.*?;', '', trans_code, re.I | re.M);
+    # change
+    trans_code = re.sub(r'--', '//', trans_code);
+    # entity
+    for n,s in re.findall('entity\s+(.*?)\s*is\s*(.*?)end.*?;', trans_code, re.I | re.S):
+	print n,s
+	# scan for signals on entity
+	signals_long = []
+	signals_short = []
+	for v,d,s in re.findall('\s*([a-z0-9_\-,\s]+):\s*(in|out)\sstd_logic(?:_vector\(\s*(.*?)\s*\)|\s*;|\s*\))', s, re.I | re.S):
+	    if s:
+		signals_long.append(d + 'put [' + re.sub("\sdownto\s", ":", s, re.I) + '] ' +  v + ';')
+	    else:
+		signals_long.append(d + 'put ' + v + ';')
+	    if signals_short:
+		signals_short = signals_short + ',' + v
+	    else:
+		signals_short = v
+	trans_code = re.sub('entity\s'+ n +'.*?end ' + n + ';', 'module ' + n + '(' + signals_short + ');\n' + '\n'.join(signals_long), trans_code, flags = re.I | re.S);
+	# architecture
+	for arch_name in re.findall('architecture\s+(.*?)\s+of\s+' + n + '\s+is', trans_code, re.I | re.S):
+	    for header, content in re.findall('architecture\s+' + arch_name + '\s+of\s+' + n + '\s+is(.*?)begin(.*?)end\s+' + arch_name + ';', trans_code, re.I | re.S):
+		print header, content
+
+    return jsonify(trans_code = trans_code)
 
 if __name__ == '__main__':
 
