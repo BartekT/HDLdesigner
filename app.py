@@ -1,7 +1,8 @@
 #!/usr/bin/python
 
 from flask import Flask, request, jsonify
-import MySQLdb
+from flask.ext.cors import CORS
+#import MySQLdb
 import json
 import re
 import hashlib
@@ -89,7 +90,7 @@ def parse_level(code, i):
 		    return blocks, code_line, i
 	    else:
 		code_line += ' ' + code[i]
-		return blocks, code_line, i + 1
+		return blocks, code_line, i
 	if code[i].lower() == 'end':
 	    end = 1
 	code_line += ' ' + code[i]
@@ -127,6 +128,8 @@ def tree_value_grep(tree, val):
 # To static file server
 #-------------------------------
 app = Flask(__name__, static_url_path='')
+
+CORS(app)
 
 @app.route('/')
 def index():
@@ -171,7 +174,7 @@ def make_edges(tree, nodes, graph, state, label = None):
 	    for s,val in re.findall('(.*)\s*<=\s*(.*)', v, re.I):
 		if val in nodes:
 		    if label:
-			graph.add_edge(pydot.Edge(nodes[state], nodes[val], label=label))
+			graph.add_edge(pydot.Edge(nodes[state], nodes[val], label=re.escape(label)))
 		    else:
 			graph.add_edge(pydot.Edge(nodes[state], nodes[val]))
 
@@ -202,10 +205,10 @@ def paint_output(tree, name):
     nodes = {}
     graph = pydot.Dot(graph_type = 'digraph', format = 'svg', graph_name = name, rankdir='LR')
     for end in list(set(tree_value_search(tree, '.*<=.*'))):
-	nodes[end] = pydot.Node(end)
+	nodes[end] = pydot.Node(re.escape(end))
 	graph.add_node(nodes[end])
     for mid in list(set(tree_key_search(tree, '.*'))):
-	nodes[mid] = pydot.Node(mid)
+	nodes[mid] = pydot.Node(re.escape(mid))
 	graph.add_node(nodes[end])
     for state, assigns in tree.iteritems():
         nodes[state] = pydot.Node(state)
@@ -216,7 +219,7 @@ def paint_output(tree, name):
 
 @app.route('/_parse_code', methods = ['POST'])
 def parse_code():
-    data = json.loads(request.data.decode())
+    data = json.loads(request.data.decode('utf-8','ignore'))
     # remove comments
     parse_code = re.sub(r'--.*?\n', '', data["data"]);
     # remove special chars
@@ -236,11 +239,11 @@ def parse_code():
     fsms = {}
     for reg in registers:
 	reg_tree = tree_key_search(process_list, reg)
-	if reg_tree:
+	if reg_tree and reg in tree_key_search(process_list, '^' + reg + '$'):
 	    fsms.update({ reg : {
-		"tree" : tree_key_search(process_list, reg)[reg],
-		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, reg), '.*?\s*<=.*')), re.I))),
-		"svg" : paint_fsm(tree_key_search(process_list, reg)[reg], reg)
+		"tree" : tree_key_search(process_list, '^' + reg + '$')[reg],
+		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, '^' + reg + '$'), '.*?\s*<=.*')), re.I))),
+		"svg" : paint_fsm(tree_key_search(process_list, '^' + reg + '$')[reg], reg)
 		}})
     outputs = {}
     for output in list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(process_list, '.*?\s*<=.*')), re.I))):
@@ -258,7 +261,6 @@ def translate():
     trans_code = re.sub(r'--', '//', trans_code);
     # entity
     for n,s in re.findall('entity\s+(.*?)\s*is\s*(.*?)end.*?;', trans_code, re.I | re.S):
-	print n,s
 	# scan for signals on entity
 	signals_long = []
 	signals_short = []
@@ -281,11 +283,11 @@ def translate():
 
 if __name__ == '__main__':
 
-    conn = MySQLdb.connect (host = "localhost",
-	    user = "proc",
-	    passwd = "proc123",
-	    db = "proc")
-    cursor = conn.cursor()
+#    conn = MySQLdb.connect (host = "localhost",
+#	    user = "proc",
+#	    passwd = "proc123",
+#	    db = "proc")
+#    cursor = conn.cursor()
 
     app.run(
         host="0.0.0.0",
@@ -293,4 +295,4 @@ if __name__ == '__main__':
         debug=True
     )
 
-    conn.close()
+#    conn.close()

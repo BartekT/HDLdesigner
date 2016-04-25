@@ -1,0 +1,61 @@
+body {
+    font-family: Arial;
+    font-size: 12px;
+    padding: 15px;
+}
+div#menu {
+    float: left;
+    padding: 6px;
+    width: 150px;
+    border-bottom: 1px solid #DDDDDD;
+}
+div#menu a {
+    color: #888888;
+    text-decoration: none;
+}
+div#menu a:hover {
+    color: #222222;
+    text-decoration: none;
+    border-bottom: 3px solid #DDDDDD;
+}
+div#logo {
+    clear: both;
+    padding-bottom: 20px;
+}
+div#subpage {
+    clear: both;
+    padding: 10px
+}
+div#subpage img#ip6502, iframe {
+    width: 600px;
+    padding: 10px;
+    float: left
+}
+div#subpage div {
+    background-color: #ddccaa;
+    box-shadow: 5px 5px 5px #888;
+    padding: 10px;
+    width: 300px;
+    float: left;
+    clear: right
+}
+div#subpage div p {
+    font-weight: bold
+}
+div#subpage ul {
+    padding-left: 15px
+}
+div#subpage p {
+    font-size: 15px
+}
+div#subpage p span {
+    font-weight: bold
+}
+div#bottom {
+    width: 900px;
+    float: left;
+    text-align: center;
+    padding: 10px;
+    font-size: 10px;
+    clear: both
+}

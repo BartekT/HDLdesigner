@@ -2,6 +2,8 @@
 <html ng-app="designer" ng-controller="menuCtrl">
    <head>
       <title>modelCHIP</title>
+      <meta name="keywords" content="FPGA, VHDL, Verilog, FSM, state machine, states, parsing, ip6502, System Verilog, signal, free, tool, control, signals">
+      <meta name="description" content="Free tool for parsing VHDL">
       <link rel="stylesheet" type="text/css" href="//codemirror.net/lib/codemirror.css"/>
       <link rel="stylesheet" type="text/css" href="css/designer.css">
       <link rel="stylesheet" type="text/css" href="//netdna.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
@@ -38,8 +40,9 @@
                lineNumbers: true,
                lineWrapping : true,
                mode: 'vhdl'
-               }" ng-model="code" ng-change="codeChange()" class="editor-window" resize></div>
+               }" ng-model="code" ng-change="timeoutCodeChange()" class="editor-window" resize></div>
             <div class="property-window">
+	       <uib-progressbar class="progress-striped active" max="100" value="100" type="info" ng-show="progress_state">refreshing...</uib-progressbar>
                <uib-tabset active="active">
                   <uib-tab index="0" heading="Control signals">
                      <div class="fsm-window">
@@ -122,8 +125,9 @@
       <!-- FOOTER -->
       <div class="footer-window">
          <ul>
-            <li><a target="_blank" href="https://github.com/BartekT/HDLdesigner">issue tracker</a></li>
-            <li><a href="javascript:document._xclick.submit();">donate</a></li>
+            <li><a target="_blank" href="https://github.com/BartekT/HDLdesigner"><img src="/images/Git_icon.svg">issue tracker</a></li>
+            <li><a href="javascript:document._xclick.submit();"><img src="/images/paypal-icon.svg">donate</a></li>
+            <li><a target="_blank" href="https://twitter.com/model_chip"><img src="/images/1461372438_twitter.svg"> @model_chip</a></li>
          </ul>
          <a href="mailto:info@modelchip.com"><img src="/images/modelchip333.png"></a>
       </div>
