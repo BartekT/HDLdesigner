@@ -42,7 +42,8 @@
                mode: 'vhdl'
                }" ng-model="code" ng-change="timeoutCodeChange()" class="editor-window" resize></div>
             <div class="property-window">
-	       <uib-progressbar class="progress-striped active" max="100" value="100" type="info" ng-show="progress_state">refreshing...</uib-progressbar>
+               <uib-progressbar class="progress-striped active" max="100" value="100" type="info" ng-show="progress_state"><b>refreshing...</b></uib-progressbar>
+               <uib-progressbar class="progress-striped" max="100" value="100" type="danger" ng-show="parsing_error"><b>parsing error</b></uib-progressbar>
                <uib-tabset active="active">
                   <uib-tab index="0" heading="Control signals">
                      <div class="fsm-window">

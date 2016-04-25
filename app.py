@@ -240,15 +240,21 @@ def parse_code():
     for reg in registers:
 	reg_tree = tree_key_search(process_list, reg)
 	if reg_tree and reg in tree_key_search(process_list, '^' + reg + '$'):
-	    fsms.update({ reg : {
-		"tree" : tree_key_search(process_list, '^' + reg + '$')[reg],
-		"state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, '^' + reg + '$'), '.*?\s*<=.*')), re.I))),
-		"svg" : paint_fsm(tree_key_search(process_list, '^' + reg + '$')[reg], reg)
-		}})
+	    output_tree = tree_key_search(process_list, '^' + reg + '$')[reg]
+	    try:
+		fsms.update({ reg : {
+		    "tree" : output_tree,
+		    "state_sig" : list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(tree_key_search(process_list, '^' + reg + '$'), '.*?\s*<=.*')), re.I))),
+		    "svg" : paint_fsm(output_tree, reg)
+		    }})
+	    except:
+		# Exception handling
+		parsing_error = 1
+		return jsonify(fsms = {}, outputs = {}, parsing_error = 1)
     outputs = {}
     for output in list(set(re.findall("(.*?)\s*<=.*?;", ";".join(tree_value_search(process_list, '.*?\s*<=.*')), re.I))):
 	outputs[output] = paint_output(tree_value_grep(process_list, output), output)
-    return jsonify(fsms = fsms, outputs = outputs)
+    return jsonify(fsms = fsms, outputs = outputs, parsing_error = 0)
 
 @app.route('/_translate', methods = ['POST'])
 def translate():

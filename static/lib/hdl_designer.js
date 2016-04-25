@@ -50,6 +50,7 @@ app.controller('HDLctrl', function ($http, $scope, $uibModal, $log, $timeout) {
   $scope.oneAtATime = true;
 
   $scope.progress_state = false;
+  $scope.parsing_error = false;
 
   $scope.animationsEnabled = true;
 
@@ -58,6 +59,7 @@ app.controller('HDLctrl', function ($http, $scope, $uibModal, $log, $timeout) {
 	$scope.fsms = response.fsms;
 	$scope.outputs = response.outputs;
 	$scope.$broadcast('rebuild:me');
+	$scope.parsing_error = response.parsing_error;
 	$scope.progress_state = false;
 	});
     $scope.code_refresh = 0;
@@ -78,6 +80,7 @@ app.controller('HDLctrl', function ($http, $scope, $uibModal, $log, $timeout) {
     if(!$scope.code_refresh)
     {
 	$scope.progress_state = true;
+	$scope.parsing_error = false;
 	$scope.code_refresh = 1;
 	$timeout($scope.codeChange, 3000);
     }
