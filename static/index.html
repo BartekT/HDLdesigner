@@ -2,7 +2,7 @@
 <html ng-app="designer" ng-controller="menuCtrl">
    <head>
       <title>modelCHIP</title>
-      <meta name="keywords" content="FPGA, VHDL, Verilog, FSM, state machine, states, parsing, ip6502, System Verilog, signal, free, tool, control, signals">
+      <meta name="keywords" content="FPGA, VHDL, Verilog, FSM, state machine, states, parsing, ip6502, System Verilog, signal, free, tool, control, signals, nip 6312438637, regon 364198566">
       <meta name="description" content="Free tool for parsing VHDL">
       <link rel="stylesheet" type="text/css" href="//codemirror.net/lib/codemirror.css"/>
       <link rel="stylesheet" type="text/css" href="css/designer.css">
@@ -24,16 +24,13 @@
       <!-- MENU -->
       <div class="menu-window">
          <div class="btn-group">
-            <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'HDL'"><img src="images/config.svg"> model<b>FSM</b></label>
-            <!-- <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'CPU'"><img src="images/pencil.svg"> model<b>CPU</b></label> -->
-            <!-- <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'IP'"><img src="images/folder.svg"> model<b>IP</b></label> -->
-            <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'Translate'"><img src="images/folder.svg"> model<b>Translate</b></label>
+            <label class="btn btn-primary" ng-model="actvPanel" uib-btn-radio="'HDL'"><img src="images/config.svg"> model<b>StateMachine</b></label>
          </div>
          <div class="btn-group" style="float: right;">
             <label class="btn btn-primary" ng-click="open('lg')"><img src="images/medal.svg"> Help</label>
          </div>
       </div>
-      <div resize>
+      <div>
          <!-- HDL designer -->
          <div ng-controller="HDLctrl" ng-show="actvPanel == 'HDL'">
             <div ui-codemirror="{
@@ -81,47 +78,6 @@
                </uib-tabset>
             </div>
          </div>
-         <!-- Translate -->
-         <div ng-controller="Transctrl" ng-show="actvPanel == 'Translate'">
-            <div ui-codemirror="{
-               lineNumbers: true,
-               lineWrapping : true,
-               mode: 'vhdl'
-               }" ng-model="code" ng-change="codeChange()" class="editor-window" resize></div>
-            <div ui-codemirror="{
-               lineNumbers: true,
-               lineWrapping : true,
-               mode: 'verilog',
-               readOnly: true
-               }" ng-model="trans_code" class="editor-window" resize></div>
-         </div>
-         <!-- CPU designer -->
-         <div ng-controller="cpu_ctrl" ng-show="actvPanel == 'CPU'">
-            <table class="instrmatrix">
-               <tr>
-                  <th></th>
-                  <th ng-repeat="x in hexitems">x{{ x }}</th>
-               </tr>
-               <tr ng-repeat="y in decitems">
-                  <th>{{ hexitems[y] }}x</th>
-                  <td ng-repeat="x in decitems" 
-                     ng-mouseenter="cellStyle={'background-color': '#ddd' };show_cycles(y*16 + x)" 
-                     ng-mouseleave="cellStyle={};hide_cycles()"
-                     ng-style="cellStyle"><b>{{ opcode_matrix[y][x] }}</b> {{ opcode_matrix_short[y][x] }}</td>
-               </tr>
-            </table>
-            <div ng-hide="!opis">
-               <table class="opcode-desc">
-                  <tr>
-                     <th colspan="{{ max_state }}">{{ sel_opcode }} {{ sel_instr }}</th>
-                  </tr>
-                  <tr ng-repeat="i in range(max_signal_length)">
-                     <th>{{i}}</th>
-                     <td ng-repeat="sigs in opis">{{ sigs[i] }}</td>
-                  </tr>
-               </table>
-            </div>
-         </div>
       </div>
       <!-- FOOTER -->
       <div class="footer-window">
@@ -138,12 +94,13 @@
                 <h3 class="modal-title">Help</h3>
             </div>
             <div class="modal-body">
-                <ul>
+<!--                <ul>
                     <li ng-repeat="item in items">
                         <a href="#" ng-click="$event.preventDefault(); selected.item = item">{{ item }}</a>
                     </li>
                 </ul>
-                Selected: <b>{{ selected.item }}</b>
+                Selected: <b>{{ selected.item }}</b>-->
+		model<b>StateMachine</b> is a tool to generate SVG files with drawing of the state machine and control signals contained in the editor tab.
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" type="button" ng-click="ok()">OK</button>

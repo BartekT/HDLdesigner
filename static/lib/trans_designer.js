@@ -1,7 +1,7 @@
 app.controller('Transctrl', function ($http, $scope) {
 
   $scope.codeChange = function() {
-    $http.post('//localhost:5000/_translate', { "data": $scope.code }).success(function(response) {
+    $http.post('//localhost:2020/_translate', { "data": $scope.code }).success(function(response) {
 	$scope.trans_code = response.trans_code;
 	});
   };

@@ -55,7 +55,7 @@ app.controller('HDLctrl', function ($http, $scope, $uibModal, $log, $timeout) {
   $scope.animationsEnabled = true;
 
   $scope.codeChange = function() {
-    $http.post('//localhost:5000/_parse_code', { "data": $scope.code }).success(function(response) {
+    $http.post('//modelchip.com:2020/_parse_code', { "data": $scope.code }).success(function(response) {
 	$scope.fsms = response.fsms;
 	$scope.outputs = response.outputs;
 	$scope.$broadcast('rebuild:me');
@@ -119,6 +119,24 @@ app.directive('resize', ['$window', function($window) {
 	            }
 	            scope.onResize();
 	                angular.element($window).bind('resize', function() {
+	                scope.onResize();
+	            })
+	        }
+	    }
+	}]);
+
+app.directive('resizee', ['$window', function($window) {
+	    return {
+	        link: function(scope, elem, attrs) {
+	            scope.onResize = function() {
+	                var padding = 34,
+			    offset = elem.prop('offsetTop'),
+	                    height = $window.innerHeight - offset - padding;
+	                elem.css({height: height + 'px'});
+			console.log(height);
+	            }
+	            scope.onResize();
+	                angular.element($window).bind('resizee', function() {
 	                scope.onResize();
 	            })
 	        }

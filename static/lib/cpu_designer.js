@@ -5,7 +5,7 @@ app.controller('cpu_ctrl', function($scope, $http) {
     $scope.decitems = [ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 ];
 
     $scope.loadTable = function() {
-	$http.get("//localhost:5000/_load_instr").then(function (response) {
+	$http.get("//localhost:2020/_load_instr").then(function (response) {
 	    $scope.opcode_matrix = response.data.opcode_matrix;
 	    $scope.opcode_matrix_short = response.data.opcode_matrix_short;
 	    $scope.opcode_cycle = response.data.opcode_cycle;
